@@ -1,0 +1,8 @@
+pytorch-lightning==2.0.2
+torch
+torchvision==0.15.2
+lightning-bolts
+pydantic
+pandas 
+wandb 
+black

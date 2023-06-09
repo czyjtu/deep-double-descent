@@ -1,3 +1,8 @@
+*.tar.gz
+logs
+wandb
+data
+deep-double-descent
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
