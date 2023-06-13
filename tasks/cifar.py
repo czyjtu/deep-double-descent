@@ -23,11 +23,7 @@ seed_everything(0)
 
 
 def inverse_sqrt_schedule(step, update_step):
-    prev_step = max(step - 1, 0)
-    multiplier = np.sqrt(1.0 + np.floor(prev_step / update_step)) / np.sqrt(
-        1.0 + np.floor(step / update_step)
-    )
-    return multiplier
+    return 1.0 / np.sqrt(1.0 + np.floor(step / update_step))
 
 
 class TrainingConfig(BaseModel):
@@ -35,7 +31,7 @@ class TrainingConfig(BaseModel):
     num_classes: PositiveInt = 10
     lr: PositiveFloat = INITIAL_LR
     lr_update_steps: PositiveInt = LR_UPDATE_STEPS
-    epochs: PositiveInt = 1
+    steps: PositiveInt = 1
     batch_size: PositiveInt = BATCH_SIZE
     num_workers: PositiveInt = NUM_WORKERS
     label_noise: PositiveFloat = 0.0  # TODO
@@ -58,6 +54,7 @@ class LitCNN(pl.LightningModule):
         x, y = batch
         logits = self(x)
         loss = F.cross_entropy(logits, y)
+        self.lr_schedulers().step()  # not sure why lightning don't do it automatically
         self.log("train_loss", loss)
         return loss
 
@@ -89,5 +86,6 @@ class LitCNN(pl.LightningModule):
                 lambda step: inverse_sqrt_schedule(step, self.config.lr_update_steps),
             ),
             "interval": "step",
+            "frequency": 1,
         }
         return {"optimizer": optimizer, "lr_scheduler": scheduler_dict}
