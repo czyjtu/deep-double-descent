@@ -8,25 +8,32 @@ from const import PATH_DATASETS, BATCH_SIZE, NUM_WORKERS
 
 
 class Cifar10DataModule(pl.LightningDataModule):
-    # TODO: augmentation and label noise (make it optional and deterministic)
 
-    def __init__(self, batch_size: int = 256):
+    def __init__(
+        self,
+        batch_size: int = 256,
+        augmentation: bool = False,
+        label_noise: float = 0.0,
+    ):
         super().__init__()
         self.batch_size = batch_size
+        self.label_noise = label_noise
 
-        self.train_transforms = tvt.Compose(
-            [
-                tvt.ToTensor(),
-                self.cifar10_normalization(),
-            ]
-        )
+        basic_transforms = [
+            tvt.ToTensor(),
+            self.cifar10_normalization(),
+        ]
+        train_transforms = basic_transforms.copy()
+        if augmentation:
+            train_transforms.extend(
+                [
+                    tvt.RandomCrop(32, padding=4),
+                    tvt.RandomHorizontalFlip(),
+                ]
+            )
 
-        self.test_transforms = tvt.Compose(
-            [
-                tvt.ToTensor(),
-                self.cifar10_normalization(),
-            ]
-        )
+        self.train_transforms = tvt.Compose(train_transforms)
+        self.test_transforms = tvt.Compose(basic_transforms)
 
     @staticmethod
     def cifar10_normalization():
@@ -36,14 +43,24 @@ class Cifar10DataModule(pl.LightningDataModule):
         )
         return normalize
 
+    def get_dataset_with_label_noise(self, label_noise):
+        train_dataset = datasets.CIFAR10(
+            PATH_DATASETS,
+            train=True,
+            download=True,
+            transform=self.train_transforms,
+        )
+        if label_noise > 0.0:
+            num_samples = len(train_dataset)
+            num_noise_samples = int(num_samples * label_noise)
+            noise_indices = th.randperm(num_samples)[:num_noise_samples]
+            for idx in noise_indices:
+                train_dataset.targets[idx] = th.randint(0, 10, size=(1,)).item() # TODO: make it deterministic
+        return train_dataset
+
     def setup(self, stage=None):
         if stage == "fit" or stage is None:
-            self.train_dataset = datasets.CIFAR10(
-                PATH_DATASETS,
-                train=True,
-                download=True,
-                transform=self.train_transforms,
-            )
+            self.train_dataset = self.get_dataset_with_label_noise(self.label_noise)
             self.test_dataset = datasets.CIFAR10(
                 PATH_DATASETS,
                 train=False,
