@@ -11,3 +11,4 @@ INITIAL_LR = 0.1
 LR_UPDATE_STEPS = 512
 
 NUM_WORKERS = int(os.cpu_count() / 2)
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

@@ -34,8 +34,8 @@ class TrainingConfig(BaseModel):
     steps: PositiveInt = 1
     batch_size: PositiveInt = BATCH_SIZE
     num_workers: PositiveInt = NUM_WORKERS
-    label_noise: PositiveFloat = 0.0  # TODO
-    augment: bool = True  # TODO
+    label_noise: PositiveFloat = 0.1  
+    augment: bool = True  
 
 
 class LitCNN(pl.LightningModule):

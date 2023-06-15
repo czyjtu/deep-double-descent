@@ -3,8 +3,9 @@ import torch as th
 from torch.utils.data import DataLoader
 import torchvision.transforms as tvt
 import torchvision.datasets as datasets
+from torch.utils.data import TensorDataset
 
-from const import PATH_DATASETS, BATCH_SIZE, NUM_WORKERS
+from const import PATH_DATASETS, BATCH_SIZE, NUM_WORKERS, DEVICE
 
 
 class Cifar10DataModule(pl.LightningDataModule):
@@ -56,6 +57,10 @@ class Cifar10DataModule(pl.LightningDataModule):
             noise_indices = th.randperm(num_samples)[:num_noise_samples]
             for idx in noise_indices:
                 train_dataset.targets[idx] = th.randint(0, 10, size=(1,)).item() # TODO: make it deterministic
+
+        images = th.stack([x[0] for x in train_dataset]).to(DEVICE)
+        targets = th.tensor(train_dataset.targets).to(DEVICE)
+        train_dataset = TensorDataset(images, targets)
         return train_dataset
 
     def setup(self, stage=None):
@@ -79,25 +84,26 @@ class Cifar10DataModule(pl.LightningDataModule):
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
-            num_workers=NUM_WORKERS,
-            shuffle=True,
-            pin_memory=True,
+            # num_workers=2,#NUM_WORKERS,
+            # shuffle=True,
+            # pin_memory=True,
+            # pin_memory_device=DEVICE
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            num_workers=NUM_WORKERS,
-            shuffle=False,
-            pin_memory=True,
+            # num_workers=NUM_WORKERS,
+            # shuffle=False,
+            # pin_memory=True,
         )
 
     def test_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            num_workers=NUM_WORKERS,
-            shuffle=False,
-            pin_memory=True,
+            # num_workers=NUM_WORKERS,
+            # shuffle=False,
+            # pin_memory=True,
         )
