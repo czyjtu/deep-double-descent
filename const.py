@@ -5,6 +5,7 @@ from torch.optim.lr_scheduler import StepLR
 
 PATH_DATASETS = Path(__file__).parent.parent / "data"
 PATH_DATASETS.mkdir(exist_ok=True)
+PATH_CHECKPOINTS_DIR = Path(__file__).parent / "model_checkpoints_examples"
 
 BATCH_SIZE = 128  # 128 was used in article
 INITIAL_LR = 0.1
