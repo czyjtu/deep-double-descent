@@ -4,12 +4,16 @@ from pytorch_lightning import Trainer
 from tasks.cifar import LitCNN, TrainingConfig
 from datamodules.cifar10 import Cifar10DataModule
 from const import BATCH_SIZE
-from pytorch_lightning.callbacks import LearningRateMonitor, TQDMProgressBar, ModelCheckpoint
+from pytorch_lightning.callbacks import (
+    LearningRateMonitor,
+    TQDMProgressBar,
+    ModelCheckpoint,
+)
 import wandb
 import click
 import logging
-import train 
-import os 
+import train
+import os
 from pathlib import Path
 from const import BATCH_SIZE, NUM_WORKERS
 
@@ -28,14 +32,26 @@ logging.info(f"Scratch DIR used: {SCRATCH_DIR}")
 @click.option("--label_noise", required=False, type=click.FLOAT, default=0.1)
 def main(steps, batch_size, lr, c, num_workers, label_noise):
     config = TrainingConfig(
-        steps=steps, lr=lr, c=c, batch_size=batch_size, num_workers=num_workers, label_noise=label_noise
+        steps=steps,
+        lr=lr,
+        c=c,
+        batch_size=batch_size,
+        num_workers=num_workers,
+        label_noise=label_noise,
     )
     logging.info(f"config used: {config}")
 
     model = LitCNN(config)
-    data_module = Cifar10DataModule(config.batch_size, augmentation=config.augment, label_noise=config.label_noise)
+    data_module = Cifar10DataModule(
+        config.batch_size, augmentation=config.augment, label_noise=config.label_noise
+    )
 
-    logger = WandbLogger(project="deep-double-descent", log_model="all", entity="czyjtu", save_dir=SCRATCH_DIR)
+    logger = WandbLogger(
+        project="deep-double-descent",
+        log_model="all",
+        entity="czyjtu",
+        save_dir=SCRATCH_DIR,
+    )
     wandb.log(config.dict())
 
     trainer = Trainer(
@@ -47,7 +63,9 @@ def main(steps, batch_size, lr, c, num_workers, label_noise):
         callbacks=[
             LearningRateMonitor(logging_interval="step"),
             TQDMProgressBar(refresh_rate=10),
-            ModelCheckpoint(SCRATCH_DIR / "model_checkpoints", save_top_k=-1, every_n_epochs=3),
+            ModelCheckpoint(
+                SCRATCH_DIR / "model_checkpoints", save_top_k=-1, every_n_epochs=3
+            ),
         ],
     )
     trainer.fit(model, data_module)

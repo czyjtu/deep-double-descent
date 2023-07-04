@@ -9,7 +9,6 @@ from const import PATH_DATASETS, BATCH_SIZE, NUM_WORKERS, DEVICE
 
 
 class Cifar10DataModule(pl.LightningDataModule):
-
     def __init__(
         self,
         batch_size: int = 256,
@@ -35,6 +34,7 @@ class Cifar10DataModule(pl.LightningDataModule):
 
         self.train_transforms = tvt.Compose(train_transforms)
         self.test_transforms = tvt.Compose(basic_transforms)
+        self.basic_transforms = tvt.Compose(basic_transforms)
 
     @staticmethod
     def cifar10_normalization():
@@ -56,11 +56,9 @@ class Cifar10DataModule(pl.LightningDataModule):
             num_noise_samples = int(num_samples * label_noise)
             noise_indices = th.randperm(num_samples)[:num_noise_samples]
             for idx in noise_indices:
-                train_dataset.targets[idx] = th.randint(0, 10, size=(1,)).item() # TODO: make it deterministic
-
-        images = th.stack([x[0] for x in train_dataset]).to(DEVICE)
-        targets = th.tensor(train_dataset.targets).to(DEVICE)
-        train_dataset = TensorDataset(images, targets)
+                train_dataset.targets[idx] = th.randint(
+                    0, 10, size=(1,)
+                ).item()  # TODO: make it deterministic
         return train_dataset
 
     def setup(self, stage=None):
@@ -84,26 +82,25 @@ class Cifar10DataModule(pl.LightningDataModule):
         return DataLoader(
             self.train_dataset,
             batch_size=self.batch_size,
-            # num_workers=2,#NUM_WORKERS,
-            # shuffle=True,
-            # pin_memory=True,
-            # pin_memory_device=DEVICE
+            num_workers=NUM_WORKERS,
+            shuffle=True,
+            pin_memory=True,
         )
 
     def val_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            # num_workers=NUM_WORKERS,
-            # shuffle=False,
-            # pin_memory=True,
+            num_workers=NUM_WORKERS,
+            shuffle=False,
+            pin_memory=True,
         )
 
     def test_dataloader(self):
         return DataLoader(
             self.test_dataset,
             batch_size=self.batch_size,
-            # num_workers=NUM_WORKERS,
-            # shuffle=False,
-            # pin_memory=True,
+            num_workers=NUM_WORKERS,
+            shuffle=False,
+            pin_memory=True,
         )
