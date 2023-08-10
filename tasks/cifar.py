@@ -5,7 +5,7 @@ import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 import numpy as np
-from pydantic import BaseModel, PositiveFloat, PositiveInt
+from pydantic import BaseModel, PositiveFloat, PositiveInt, NonNegativeFloat
 import torch
 import torch.nn.functional as F
 import pytorch_lightning as pl
@@ -34,7 +34,7 @@ class TrainingConfig(BaseModel):
     steps: PositiveInt = 1
     batch_size: PositiveInt = BATCH_SIZE
     num_workers: PositiveInt = NUM_WORKERS
-    label_noise: PositiveFloat = 0.1  
+    label_noise: NonNegativeFloat = 0.1  
     augment: bool = True  
 
 
